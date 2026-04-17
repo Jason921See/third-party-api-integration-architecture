@@ -2,9 +2,9 @@
 
 namespace App\Jobs\Tenant;
 
-use App\Integrations\Facebook\Contracts\SyncableIntegrationJob;
-use App\Integrations\Facebook\FacebookClient;
-use App\Integrations\Facebook\FacebookService;
+use App\Integrations\Tenant\ExternalService\Facebook\Contracts\SyncableIntegrationJob;
+use App\Integrations\Tenant\ExternalService\Facebook\FacebookClient;
+use App\Integrations\Tenant\ExternalService\Facebook\FacebookService;
 use App\Models\Tenant\Integration;
 use App\Models\Tenant\IntegrationAd;
 use Illuminate\Bus\Queueable;

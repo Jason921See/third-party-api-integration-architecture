@@ -5,6 +5,9 @@ namespace App\Services\Tenant;
 use App\Integrations\Tenant\ExternalService\Facebook\FacebookService;
 use App\Jobs\Tenant\FetchFacebookInsightJob;
 use App\Models\Tenant\Integration;
+use App\Models\Tenant\IntegrationProvider;
+use Illuminate\Support\Collection;
+// use Illuminate\Database\Eloquent\Collection;
 
 class IntegrationService
 {
@@ -15,9 +18,9 @@ class IntegrationService
     public function connect(int $userId, string $provider, string $accessToken, string $adAccountId): array
     {
         $adAccountId = $this->normalizeAdAccountId($adAccountId);
-
+        $integrationProvider = IntegrationProvider::where('slug', $provider)->first();
         // 🔒 prevent duplicate integration (race-condition safe)
-        $existing = Integration::where('provider', $provider)
+        $existing = Integration::where('ip_id', $integrationProvider->id)
             ->where('external_user_id', $adAccountId)
             ->first();
 
@@ -26,7 +29,9 @@ class IntegrationService
             if ($existing->user_id === $userId) {
                 return [
                     'success' => true,
-                    'integration' => $existing,
+                    'data' => [
+                        'integration' => $existing,
+                    ],
                 ];
             }
 
@@ -50,36 +55,27 @@ class IntegrationService
     // Sync
     // ─────────────────────────────────────────────
 
-    public function sync(int $userId, string $provider, array $validated): array
+    public function sync(Collection $integrations, array $validated): array
     {
-        $integration = $this->findActiveIntegration($userId, $provider);
-
-        if (!$integration) {
+        if ($integrations->isEmpty()) {
             return [
                 'success' => false,
-                'error'   => ucfirst($provider) . ' integration not found or not connected.',
+                'error'   => 'No active integrations found or not connected.',
                 'code'    => 404,
             ];
         }
 
-        $dispatched = match ($provider) {
-            'facebook' => $this->dispatchFacebookSync($integration, $validated),
-            default    => false,
-        };
-
-        if (!$dispatched) {
-            return [
-                'success' => false,
-                'error'   => "Provider [{$provider}] sync not supported.",
-                'code'    => 422,
-            ];
+        foreach ($integrations as $integration) {
+            match ($integration->provider->slug ?? null) {
+                'facebook' => $this->dispatchFacebookSync($integration, $validated),
+                default    => null,
+            };
         }
 
         return [
             'success'   => true,
-            'provider'  => $provider,
+            'provider'  => $validated['provider'],
             'level'     => $validated['level'],
-            'fields'    => $validated['fields'] ?? $this->getDefaultFields(),
             'date_from' => $validated['date_from'],
             'date_to'   => $validated['date_to'],
         ];
@@ -95,7 +91,7 @@ class IntegrationService
             integrationId: $integration->id,
             level: $validated['level'],
             adAccountId: $integration->external_user_id,
-            fields: $validated['fields'] ?? $this->getDefaultFields(),
+            fields: $validated['fields'] ?? null,
             dateStart: $validated['date_from'],
             dateStop: $validated['date_to'],
         );
@@ -107,12 +103,12 @@ class IntegrationService
     // Helpers
     // ─────────────────────────────────────────────
 
-    public function findActiveIntegration(int $userId, string $providerSlug): ?Integration
+    public function findActiveIntegration(int $userId, string $providerSlug): ?Collection
     {
         return Integration::where('user_id', $userId)
             ->whereHas('provider', fn($q) => $q->where('slug', $providerSlug))
             ->where('status', 'active')
-            ->first();
+            ->get();
     }
 
     public function normalizeAdAccountId(string $adAccountId): string

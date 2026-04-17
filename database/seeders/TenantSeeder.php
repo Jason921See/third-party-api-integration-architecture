@@ -18,6 +18,6 @@ class TenantSeeder extends Seeder
             'tenancy_db_name' => 'tenant_' . Str::random(10),
         ]);
 
-        $tenant->domains()->create(['domain' => 'tenant.test']);
+        $tenant->domains()->create(['domain' => 'tenant.central.test']);
     }
 }

@@ -22,20 +22,20 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 |
 */
 
-Route::post('/login', [TenantAuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/integrations/connect', [IntegrationController::class, 'connect']);
-    Route::post('/integrations/sync', [IntegrationController::class, 'sync']);
+// Route::post('/login', [TenantAuthController::class, 'login']);
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::post('/integrations/connect', [IntegrationController::class, 'connect']);
+//     Route::post('/integrations/sync', [IntegrationController::class, 'sync']);
 
-    Route::get('/insights',     [IntegrationInsightController::class, 'index']);
-    // Route::get('/insights/{id}', [IntegrationInsightController::class, 'show']);
+//     Route::get('/insights',     [IntegrationInsightController::class, 'index']);
+//     // Route::get('/insights/{id}', [IntegrationInsightController::class, 'show']);
 
-    Route::get('/integrations/status',      [IntegrationStatusController::class, 'index']);
-    // Route::get('/integrations/{id}/status', [IntegrationStatusController::class, 'show']);
+//     Route::get('/integrations/status',      [IntegrationStatusController::class, 'index']);
+//     // Route::get('/integrations/{id}/status', [IntegrationStatusController::class, 'show']);
 
-    Route::post('/logout', [TenantAuthController::class, 'logout']);
-    Route::get('/me', [TenantAuthController::class, 'me']);
-});
+//     Route::post('/logout', [TenantAuthController::class, 'logout']);
+//     Route::get('/me', [TenantAuthController::class, 'me']);
+// });
 
 // Route::middleware([
 //     'web',
@@ -46,3 +46,23 @@ Route::middleware('auth:sanctum')->group(function () {
 //         return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
 //     });
 // });
+
+
+Route::middleware([
+    InitializeTenancyByDomain::class,
+    PreventAccessFromCentralDomains::class,
+])->group(function () {
+
+    Route::post('/login', [TenantAuthController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/integrations/connect', [IntegrationController::class, 'connect']);
+        Route::post('/integrations/sync', [IntegrationController::class, 'sync']);
+
+        Route::get('/insights', [IntegrationInsightController::class, 'index']);
+        Route::get('/integrations/status', [IntegrationController::class, 'status']);
+
+        Route::post('/logout', [TenantAuthController::class, 'logout']);
+        Route::get('/me', [TenantAuthController::class, 'me']);
+    });
+});

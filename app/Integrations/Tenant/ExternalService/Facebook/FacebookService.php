@@ -465,18 +465,19 @@ class FacebookService
 
             return [
                 'success'     => true,
-                'integration' => [
-                    'id'              => $integration->id,
-                    'provider'        => $this->provider->slug,
-                    'account_id'      => $adAccountId,
-                    'account_name'    => $integration->external_account_name,
-                    'status'          => $integration->status,
-                    'scopes'          => $integration->scopes,
-                    'currency'        => $integration->meta['currency'] ?? null,
-                    'timezone'        => $integration->meta['timezone'] ?? null,
-                    'token_expires_at' => $integration->token_expires_at,
-                    'connected_at'    => $integration->updated_at,
-                ],
+                'integration' => $integration
+                // 'id'              => $integration->id,
+                // 'provider'        => $this->provider->slug,
+                // 'account_id'      => $adAccountId,
+                // 'account_name'    => $integration->external_account_name,
+                // 'status'          => $integration->status,
+                // 'scopes'          => $integration->scopes,
+                // 'currency'        => $integration->meta['currency'] ?? null,
+                // 'timezone'        => $integration->meta['timezone'] ?? null,
+                // 'token_expires_at' => $integration->token_expires_at,
+                // 'connected_at'    => $integration->updated_at,
+
+
             ];
         } catch (\Exception $e) {
             DB::rollBack();

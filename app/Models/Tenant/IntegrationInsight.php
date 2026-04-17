@@ -2,17 +2,25 @@
 
 namespace App\Models\Tenant;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IntegrationInsight extends Model
 {
+    use HasFactory;
+    
     protected $fillable = [
         'integration_id',
         'level',
-        'object_id',
-        'object_name',
-        'parent_object_id',
+        'account_id',
+        'campaign_id',
+        'adset_id',
+        'ad_id',
+        'account_name',
+        'campaign_name',
+        'adset_name',
+        'ad_name',
         'date_start',
         'date_stop',
         'account_currency',

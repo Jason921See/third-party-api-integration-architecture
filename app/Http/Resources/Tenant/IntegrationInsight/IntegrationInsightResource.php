@@ -13,15 +13,14 @@ class IntegrationInsightResource extends JsonResource
             'id'             => $this->id,
             'integration_id' => $this->integration_id,
             'level'          => $this->level,
-            'object'         => [
-                'id'        => $this->object_id,
-                'name'      => $this->object_name,
-                'parent_id' => $this->parent_object_id,
-            ],
-            'date'           => [
-                'start' => $this->date_start?->toDateString(),
-                'stop'  => $this->date_stop?->toDateString(),
-            ],
+
+            'object_id'        => $this->object_id,
+            'object_name'      => $this->object_name,
+
+
+            'date_start' => $this->date_start?->toDateString(),
+            'date_stop'  => $this->date_stop?->toDateString(),
+
             'metrics'        => [
                 'impressions' => (int) $this->impressions,
                 'clicks'      => (int) $this->clicks,

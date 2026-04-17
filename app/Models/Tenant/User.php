@@ -13,6 +13,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $connection = 'tenant'; // Ensure this model uses the tenant database connection
     /**
      * The attributes that are mass assignable.
      *

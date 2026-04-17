@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\Tenant;
 
 use App\Models\Tenant\Integration;
 use App\Models\Tenant\User;

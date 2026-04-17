@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Tenant;
+namespace App\Http\Resources\Tenant\Integration;
 
 use App\Http\Resources\Tenant\IntegrationJobResource;
 use Illuminate\Http\Request;

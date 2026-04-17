@@ -3,11 +3,14 @@
 namespace App\Models\Tenant;
 
 use App\Models\Tenant\IntegrationJob;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
 class Integration extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'ip_id',
@@ -78,25 +81,25 @@ class Integration extends Model
         return $this->token_expires_at && $this->token_expires_at->isPast();
     }
 
-    public function objects()
-    {
-        return $this->hasMany(IntegrationObject::class);
-    }
+    // public function objects()
+    // {
+    //     return $this->hasMany(IntegrationObject::class);
+    // }
 
-    public function campaigns()
-    {
-        return $this->hasMany(IntegrationObject::class)->where('object_type', 'campaign');
-    }
+    // public function campaigns()
+    // {
+    //     return $this->hasMany(IntegrationObject::class)->where('object_type', 'campaign');
+    // }
 
-    public function adsets()
-    {
-        return $this->hasMany(IntegrationObject::class)->where('object_type', 'adset');
-    }
+    // public function adsets()
+    // {
+    //     return $this->hasMany(IntegrationObject::class)->where('object_type', 'adset');
+    // }
 
-    public function ads()
-    {
-        return $this->hasMany(IntegrationObject::class)->where('object_type', 'ad');
-    }
+    // public function ads()
+    // {
+    //     return $this->hasMany(IntegrationObject::class)->where('object_type', 'ad');
+    // }
 
     public function insights()
     {

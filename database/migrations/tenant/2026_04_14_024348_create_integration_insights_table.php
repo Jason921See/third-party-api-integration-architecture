@@ -17,9 +17,11 @@ return new class extends Migration
 
             // ── Level + object identity ───────────────────────────────────────────
             $table->string('level');                          // account | campaign | adset | ad
-            $table->string('object_id')->nullable();          // campaign_id / adset_id / ad_id / account_id
+            $table->string('account_id', 30)->nullable();
+            $table->string('campaign_id', 30)->nullable();
+            $table->string('adset_id', 30)->nullable();
+            $table->string('ad_id', 30)->nullable();
             $table->string('object_name')->nullable();
-            $table->string('parent_object_id')->nullable();   // adset_id for ad, campaign_id for adset
 
             // ── Date range ────────────────────────────────────────────────────────
             $table->date('date_start');
@@ -57,11 +59,10 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             // One row per integration + level + object + date range
-            $table->unique(['integration_id', 'level', 'object_id', 'date_start', 'date_stop'], 'insights_unique');
+            // $table->unique(['integration_id', 'level', 'object_id', 'date_start', 'date_stop'], 'insights_unique');
+            $table->unique(['integration_id', 'date_start', 'date_stop', 'account_id', 'campaign_id', 'adset_id', 'ad_id'], 'insights_unique');
 
             $table->index('level');
-            $table->index('object_id');
-            $table->index('parent_object_id');
             $table->index('date_start');
             $table->index('date_stop');
         });

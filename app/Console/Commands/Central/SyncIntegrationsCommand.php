@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Central;
 
-use App\Integrations\IntegrationSyncRegistry;
+use App\Integrations\Tenant\ExternalService\IntegrationSyncRegistry;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Integration;
 use Illuminate\Console\Command;

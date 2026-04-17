@@ -40,10 +40,21 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
         'api' => [
-            'driver'   => 'sanctum',   // ← sanctum
+            'driver' => 'sanctum',
             'provider' => 'users',
         ],
+        
+        // 'central' => [
+        //     'driver' => 'sanctum',
+        //     'provider' => 'central_users',
+        // ],
+
+        // 'tenant' => [
+        //     'driver' => 'sanctum',
+        //     'provider' => 'users',
+        // ],
     ],
 
     /*
@@ -67,6 +78,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model'  => App\Models\Tenant\User::class,
+        ],
+
+        'central_users' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\Central\User::class,
         ],
 
         // 'users' => [

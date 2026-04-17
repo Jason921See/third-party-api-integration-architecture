@@ -2,7 +2,15 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Http\Requests\Tenant\ConnectIntegrationRequest;
+use App\Http\Requests\Tenant\SyncIntegrationInsightRequest;
+use App\Http\Resources\Tenant\ApiResponseResource;
+use App\Http\Resources\Tenant\Integration\IntegrationResource;
+use App\Http\Resources\Tenant\Integration\IntegrationStatusCollection;
+use App\Models\Tenant\Integration;
+use App\Models\Tenant\IntegrationProvider;
 use App\Services\Tenant\IntegrationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -18,36 +26,10 @@ class IntegrationController extends BaseController
     // POST /api/integrations/connect
     // ─────────────────────────────────────────────
 
-    public function connect(Request $request)
+    public function connect(ConnectIntegrationRequest $request)
     {
-        // ✅ normalize BEFORE validation
-        $request->merge([
-            'credentials' => array_merge(
-                $request->input('credentials', []),
-                [
-                    'ad_account_id' => $this->integrationService->normalizeAdAccountId(
-                        $request->input('credentials.ad_account_id')
-                    ),
-                ]
-            )
-        ]);
-
-        $validated = $request->validate([
-            'provider' => ['required', 'string', 'in:facebook,google,tiktok'],
-
-            'credentials' => ['required', 'array'],
-
-            'credentials.access_token' => ['required', 'string'],
-
-            'credentials.ad_account_id' => [
-                'required',
-                'string',
-                // ✅ ensure uniqueness per provider
-                Rule::unique('integrations', 'external_user_id')
-                    ->where(fn($q) => $q->where('provider', $request->provider)),
-            ],
-        ]);
-
+        $validated = $request->validated();
+        Log::info('ConnectIntegrationRequest validated data', ['validated' => $validated]);
         $result = $this->integrationService->connect(
             userId: auth()->id(),
             provider: $validated['provider'],
@@ -55,46 +37,98 @@ class IntegrationController extends BaseController
             adAccountId: $validated['credentials']['ad_account_id'],
         );
 
+        Log::info('Integration connect result', [
+            'result' => $result,
+            'validated' => $validated,
+        ]);
         if (!$result['success']) {
-            return response()->json([
-                'message' => $result['error']
-            ], $result['code']);
+            return ApiResponseResource::error(
+                $result['error'],
+                $result['code']
+            );
         }
 
-        return response()->json([
-            'message' => ucfirst($validated['provider']) . ' integration connected successfully.',
-            'integration' => $result['integration'],
-        ], 201);
+        return ApiResponseResource::success(
+            data: [
+                'integration' => new IntegrationResource($result['integration']),
+            ],
+            message: ucfirst($validated['provider']) . ' integration connected successfully.'
+        );
     }
 
-    public function sync(Request $request)
+    public function sync(SyncIntegrationInsightRequest  $request)
     {
-        $validated = $request->validate([
-            'provider'  => 'required|string|in:facebook,google,tiktok',
-            'level'     => 'required|string|in:campaign,adset,ad',
-            'fields'    => 'nullable|array',
-            'fields.*'  => 'string|in:impressions,clicks,reach,spend,cpc,cpm,ctr,cpp,frequency,actions,action_values',
-            'date_from' => 'required|date',
-            'date_to'   => 'required|date|after_or_equal:date_from',
-        ]);
+        $validated = $request->validated();
+
+        $integrations = $this->integrationService->findActiveIntegration(auth()->id(), $validated['provider']);
+
+        if ($integrations->isEmpty()) {
+            return ApiResponseResource::error(
+                'No active integrations found for this provider.',
+                404
+            );
+        }
+
+        foreach ($integrations as $integration) {
+            $this->authorize('sync', $integration);
+        }
 
         $result = $this->integrationService->sync(
-            userId: auth()->id(),
-            provider: $validated['provider'],
+            integrations: $integrations,
             validated: $validated,
         );
 
         if (!$result['success']) {
-            return response()->json(['message' => $result['error']], $result['code']);
+            return ApiResponseResource::error(
+                $result['error'],
+                $result['code']
+            );
         }
 
-        return response()->json([
-            'message'   => 'Sync job queued successfully.',
-            'provider'  => $result['provider'],
-            'level'     => $result['level'],
-            'fields'    => $result['fields'],
-            'date_from' => $result['date_from'],
-            'date_to'   => $result['date_to'],
-        ], 202);
+        return ApiResponseResource::success(
+            data: [
+                'provider'  => $result['provider'],
+                'level'     => $result['level'],
+                'fields'    => $result['fields'] ?? null,
+                'date_from' => $result['date_from'],
+                'date_to'   => $result['date_to'],
+            ],
+            message: 'Sync job queued successfully.'
+        );
+    }
+
+    public function status(Request $request)
+    {
+        $perPage = $request->integer('per_page', 10);
+        $query = Integration::with([
+            'provider',
+            'runningJobs',
+            'history',
+            'completed',
+            'lastFailedJob',
+        ]);
+
+        if ($provider = $request->query('provider')) {
+            $query->whereHas(
+                'provider',
+                fn($q) =>
+                $q->where('slug', $provider)
+            );
+        }
+
+        $paginated = $query->paginate($perPage);
+
+        $filtered = $paginated->getCollection()
+            ->filter(
+                fn($integration) =>
+                $request->user()->can('view', $integration)
+            )
+            ->values();
+
+        $paginated->setCollection($filtered);
+        return ApiResponseResource::success(
+            data: new IntegrationStatusCollection($paginated),
+            message: 'Integration status retrieved successfully.'
+        );
     }
 }

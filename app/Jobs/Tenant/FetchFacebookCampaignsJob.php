@@ -2,9 +2,9 @@
 
 namespace App\Jobs\Tenant;
 
-use App\Integrations\Facebook\Contracts\SyncableIntegrationJob;
-use App\Integrations\Facebook\FacebookClient;
-use App\Integrations\Facebook\FacebookService;
+use App\Integrations\Tenant\ExternalService\Facebook\Contracts\SyncableIntegrationJob;
+use App\Integrations\Tenant\ExternalService\Facebook\FacebookClient;
+use App\Integrations\Tenant\ExternalService\Facebook\FacebookService;
 use App\Jobs\Concerns\Tenant\TrackIntegrationJob;
 use App\Models\Tenant\Integration;
 use App\Models\Tenant\IntegrationAdCampaign;
@@ -63,6 +63,7 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
     public function handle(FacebookService $facebookService): void
     {
         $this->startTracking();
+
         $integration = Integration::findOrFail($this->integrationId);
 
         Log::info('FetchFacebookCampaignsJob started', [
@@ -70,14 +71,14 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
             'ad_account_id'  => $integration->external_user_id,
         ]);
 
+        // ─────────────────────────────
+        // Token refresh
+        // ─────────────────────────────
         if ($integration->isTokenExpired()) {
             $refreshed = $facebookService->refreshToken($integration);
 
             if (!$refreshed['success']) {
-                Log::error('FetchFacebookCampaignsJob token refresh failed', [
-                    'integration_id' => $this->integrationId,
-                    'error'          => $refreshed['error'],
-                ]);
+                $this->failTracking('Token refresh failed: ' . $refreshed['error']);
                 $this->fail('Token refresh failed: ' . $refreshed['error']);
                 return;
             }
@@ -87,6 +88,7 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
 
         $client      = new FacebookClient($integration);
         $adAccountId = $integration->external_user_id;
+
         $totalSynced = 0;
 
         $params = [
@@ -94,57 +96,69 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
             'limit'  => 500,
         ];
 
+        // ─────────────────────────────
+        // FIRST REQUEST
+        // ─────────────────────────────
         $response = $client->get("{$adAccountId}/campaigns", $params);
 
         if (!$response->success) {
-            Log::error('FetchFacebookCampaignsJob fetch failed', [
-                'integration_id' => $this->integrationId,
-                'error'          => $response->errorMessage,
-                'error_code'     => $response->errorCode,
-            ]);
+            $this->failTracking($response->errorMessage);
             throw new \Exception("Facebook campaigns fetch failed: {$response->errorMessage}");
         }
 
-        foreach ($response->data['data'] ?? [] as $campaign) {
-            $this->upsertCampaign($integration->id, $campaign);
-            $totalSynced++;
-            $this->integrationJob?->update([
-                'records_synced' => $totalSynced,
-            ]);
-        }
+        // ─────────────────────────────
+        // PROCESS FIRST PAGE (CHUNKED)
+        // ─────────────────────────────
+        $totalSynced += $this->processChunk($integration->id, $response->data['data'] ?? []);
 
         $after = $response->data['paging']['cursors']['after'] ?? null;
 
+        // ─────────────────────────────
+        // PAGINATION LOOP (SAFE + RATE LIMIT FRIENDLY)
+        // ─────────────────────────────
         while ($after) {
-            $next = $client->get("{$adAccountId}/campaigns", array_merge($params, ['after' => $after]));
+
+            // 🧠 prevent rate limit spikes
+            usleep(300000); // 0.3 sec delay (adjust as needed)
+
+            $next = $client->get(
+                "{$adAccountId}/campaigns",
+                array_merge($params, ['after' => $after])
+            );
 
             if (!$next->success) {
-                Log::warning('FetchFacebookCampaignsJob pagination failed', [
+                Log::warning('Pagination failed', [
                     'integration_id' => $this->integrationId,
                     'error'          => $next->errorMessage,
                 ]);
                 break;
             }
 
-            $page = $next->data['data'] ?? [];
+            $pageData = $next->data['data'] ?? [];
 
-            foreach ($page as $campaign) {
-                $this->upsertCampaign($integration->id, $campaign);
-                $totalSynced++;
+            if (empty($pageData)) {
+                break;
             }
 
-            $after = !empty($page)
-                ? ($next->data['paging']['cursors']['after'] ?? null)
-                : null;
+            // ─────────────────────────────
+            // PROCESS CHUNK
+            // ─────────────────────────────
+            $totalSynced += $this->processChunk($integration->id, $pageData);
+
+            $after = $next->data['paging']['cursors']['after'] ?? null;
+
+            // optional safety break (avoid infinite loop)
+            if (count($pageData) < 1) {
+                break;
+            }
         }
+
+        $this->completeTracking($totalSynced);
 
         Log::info('FetchFacebookCampaignsJob completed', [
             'integration_id' => $this->integrationId,
-            'ad_account_id'  => $adAccountId,
             'total_synced'   => $totalSynced,
         ]);
-
-        $this->completeTracking($totalSynced);
     }
 
     private function upsertCampaign(int $integrationId, array $campaign): void
@@ -192,5 +206,27 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
         ]);
 
         $this->failTracking($exception->getMessage());
+    }
+
+    private function processChunk(int $integrationId, array $campaigns): int
+    {
+        $count = 0;
+
+        foreach ($campaigns as $campaign) {
+            $this->upsertCampaign($integrationId, $campaign);
+            $count++;
+
+            // optional: avoid DB overload
+            if ($count % 100 === 0) {
+                usleep(100000); // micro pause
+            }
+        }
+
+        // update progress tracking (optional but useful for UI)
+        $this->integrationJob?->update([
+            'records_synced' => $this->integrationJob->records_synced + $count,
+        ]);
+
+        return $count;
     }
 }

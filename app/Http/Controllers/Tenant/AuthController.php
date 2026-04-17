@@ -45,42 +45,44 @@ class AuthController extends BaseController
         ]);
     }
 
-    public function refresh(Request $request)
-    {
-        $request->validate([
-            'refresh_token' => 'required|string',
-        ]);
+    // public function refresh(Request $request)
+    // {
+    //     $request->validate([
+    //         'refresh_token' => 'required|string',
+    //     ]);
 
-        try {
-            // Use Passport's internal server to refresh token
-            $response = $this->authService->callPassportRefresh($request->refresh_token);
+    //     try {
+    //         // Use Passport's internal server to refresh token
+    //         $response = $this->authService->callPassportRefresh($request->refresh_token);
 
-            if (isset($response['error'])) {
-                return response()->json(['message' => 'Invalid or expired refresh token'], 401);
-            }
+    //         if (isset($response['error'])) {
+    //             return response()->json(['message' => 'Invalid or expired refresh token'], 401);
+    //         }
 
-            return response()->json([
-                'access_token'  => $response['access_token'],
-                'refresh_token' => $response['refresh_token'],
-                'token_type'    => 'Bearer',
-                'expires_in'    => $response['expires_in'],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Could not refresh token: ' . $e->getMessage()], 401);
-        }
-    }
+    //         return response()->json([
+    //             'access_token'  => $response['access_token'],
+    //             'refresh_token' => $response['refresh_token'],
+    //             'token_type'    => 'Bearer',
+    //             'expires_in'    => $response['expires_in'],
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => 'Could not refresh token: ' . $e->getMessage()], 401);
+    //     }
+    // }
 
 
     public function logout(Request $request)
     {
         // Revoke current token only
-        $request->user()->currentAccessToken()->delete();
+        $request->user('tenant')->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json([
+            'user' => auth('tenant')->user()
+        ]);
     }
 }
