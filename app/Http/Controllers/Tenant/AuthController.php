@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Models\Tenant\User;
 use App\Services\Tenant\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Laravel\Passport\RefreshToken;
 
 class AuthController extends BaseController
 {

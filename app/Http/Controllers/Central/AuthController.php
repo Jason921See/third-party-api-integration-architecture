@@ -23,6 +23,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
@@ -38,9 +39,10 @@ class AuthController extends Controller
         );
 
         return response()->json([
+            'success' => true,
             'access_token' => $tokenResult->plainTextToken,
             'token_type'   => 'Bearer',
-            'expires_at'   => $expiresAt->toDateTimeString(),
+            // 'expires_at'   => $expiresAt->toDateTimeString(),
             // 'user'         => [
             //     'id'    => $user->id,
             //     'name'  => $user->name,
