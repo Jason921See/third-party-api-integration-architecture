@@ -100,7 +100,7 @@ class FetchFacebookInsightJob implements ShouldQueue
             'time_increment' => '1',
             'limit' => 500,
         ];
-        Log::info(json_encode($params));
+        // Log::info(json_encode($params));
         if ($this->dateStart && $this->dateStop) {
             $params['time_range'] = json_encode([
                 'since' => $this->dateStart,

@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    'domain' => env('CENTRAL_DOMAIN', 'central.test'),
 ];
