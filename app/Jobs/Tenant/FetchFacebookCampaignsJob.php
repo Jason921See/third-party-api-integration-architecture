@@ -216,13 +216,13 @@ class FetchFacebookCampaignsJob implements ShouldQueue, SyncableIntegrationJob
             $this->upsertCampaign($integrationId, $campaign);
             $count++;
 
-            // optional: avoid DB overload
+            // for each 100 records, pause briefly to avoid hitting rate limits
             if ($count % 100 === 0) {
                 usleep(100000); // micro pause
             }
         }
 
-        // update progress tracking (optional but useful for UI)
+        // update progress tracking for UI
         $this->integrationJob?->update([
             'records_synced' => $this->integrationJob->records_synced + $count,
         ]);

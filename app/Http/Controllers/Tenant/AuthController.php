@@ -24,7 +24,7 @@ class AuthController extends BaseController
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['success' => false, 'message' => 'Invalid credentials'], 401);
         }
 
         // Revoke all existing tokens
@@ -39,9 +39,10 @@ class AuthController extends BaseController
         );
 
         return response()->json([
+            'success' => true,
             'access_token' => $tokenResult->plainTextToken,
             'token_type'   => 'Bearer',
-            'expires_at'   => $expiresAt->toDateTimeString(),
+            // 'expires_at'   => $expiresAt->toDateTimeString(),
         ]);
     }
 

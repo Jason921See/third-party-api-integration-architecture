@@ -59,7 +59,7 @@ trait TrackIntegrationJob
 
     protected function failTracking(string $message, array $context = []): void
     {
-        // Try to find the last running job for this integration + type
+        // Find the last running job for this integration + type
         // in case $this->integrationJob was not set (e.g. job was retried fresh)
         $job = $this->integrationJob ?? IntegrationJob::where('integration_id', $this->integrationId)
             ->where('job_type', $this->jobType ?? 'unknown')
