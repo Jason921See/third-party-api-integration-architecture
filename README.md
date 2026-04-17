@@ -6,17 +6,17 @@ This repository is a Laravel-based tenant-aware integration platform for connect
 
 - Tenant-scoped API routes under `routes/tenant.php`
 - A centralized `IntegrationService` to coordinate connect and sync requests
-- A dedicated external service layer for provider-specific API interactions
+- A dedicated external service layer for provider specific API interactions
 - Background sync jobs to fetch external insight data
 - Feature and unit test coverage with mocked third-party API responses
 
 ## Architecture Decisions
 
 - **Tenant-aware routing**: Tenant routes are registered via `app/Providers/TenancyServiceProvider.php` and prefixed with `/api`.
-- **Service layer separation**: `App\Services\Tenant\IntegrationService` handles generic integration workflows, while provider-specific logic lives in `App\Integrations\Tenant\ExternalService\Facebook`.
-- **Provider abstraction**: The `FacebookService` encapsulates Facebook-specific token validation, refresh, and ad account retrieval.
-- **Job-based sync**: Sync requests queue `FetchFacebookInsightJob` instead of performing long-running HTTP calls during the request.
-- **HTTP mocking support**: Tests use `Http::fake()` to simulate third-party Facebook API responses without network access.
+- **Service layer separation**: `App\Services\Tenant\IntegrationService` handles generic integration workflows, while provider specific logic lives in `App\Integrations\Tenant\ExternalService\Facebook`.
+- **Provider abstraction**: The `FacebookService` encapsulates Facebook specific token validation, refresh, and ad account retrieval.
+- **Job-based sync**: Sync requests queue `FetchFacebookInsightJob` instead of performing long running HTTP calls during the request.
+- **HTTP mocking support**: Tests use `Http::fake()` to simulate Third-Party Facebook API responses without network access.
 - **Data persistence**: `Integration` and `IntegrationProvider` models store tenant integrations and provider metadata separately.
 
 ## How to Add a New Integration
@@ -80,7 +80,6 @@ This repository is a Laravel-based tenant-aware integration platform for connect
 
 - Feature tests are placed under `tests/Feature/Tenant/Integration`.
 - Unit tests for integration services are under `tests/Unit/Tenant/Integration`.
-- Third-party API responses are mocked using `Http::fake()`.
 
 ## Key Files
 
