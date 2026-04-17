@@ -32,10 +32,6 @@ class IntegrationControllerTest extends TestCase
         $this->actingAs($user, 'sanctum');
     }
 
-    // ══════════════════════════════════════════════════════════
-    // POST /api/integrations/connect
-    // ══════════════════════════════════════════════════════════
-
     protected function tenantPostJson(string $uri, array $data = [])
     {
         return $this->withServerVariables([
@@ -49,6 +45,10 @@ class IntegrationControllerTest extends TestCase
             'HTTP_HOST' => 'tenant.central.test',
         ])->getJson("http://tenant.central.test{$uri}", $data);
     }
+
+    // ══════════════════════════════════════════════════════════
+    // POST /api/integrations/connect
+    // ══════════════════════════════════════════════════════════
 
     #[Test]
     public function connect_returns_success_with_valid_payload(): void
@@ -211,34 +211,6 @@ class IntegrationControllerTest extends TestCase
             ->assertJsonPath('message', 'No active integrations found for this provider.');
     }
 
-    // #[Test]
-    // public function sync_returns_error_when_service_fails(): void
-    // {
-    //     $integration = Integration::factory()->create(['user_id' => $this->user->id]);
-
-    //     $serviceMock = $this->mock(IntegrationService::class);
-
-    //     $serviceMock->shouldReceive('findActiveIntegration')
-    //         ->andReturn(collect([$integration]));
-
-    //     $serviceMock->shouldReceive('sync')
-    //         ->andReturn([
-    //             'success' => false,
-    //             'error'   => 'Sync dispatch failed.',
-    //             'code'    => 500,
-    //         ]);
-
-    //     $this->authLogin();
-    //     $response = $this->tenantPostJson('/api/integrations/sync', [
-    //         'provider'  => 'facebook',
-    //         'level'     => 'campaign',
-    //         'date_from' => '2024-01-01',
-    //         'date_to'   => '2024-01-31',
-    //     ]);
-
-    //     $response->assertStatus(500)
-    //         ->assertJsonPath('success', false);
-    // }
 
     #[Test]
     public function sync_enforces_authorization_policy(): void
