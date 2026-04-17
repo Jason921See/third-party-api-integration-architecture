@@ -7,14 +7,14 @@ use App\Models\Tenant\IntegrationInsight;
 use App\Models\Tenant\IntegrationProvider;
 use App\Models\Tenant\User;
 use Database\Seeders\TenantDatabaseSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class IntegrationInsightControllerTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private User $user;
     private IntegrationProvider $facebookProvider;

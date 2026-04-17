@@ -6,14 +6,15 @@ use App\Models\Tenant\Integration;
 use App\Models\Tenant\User;
 use App\Services\Tenant\IntegrationService;
 use Database\Seeders\TenantDatabaseSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+// use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class IntegrationControllerTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private User $user;
 

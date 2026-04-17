@@ -8,7 +8,7 @@ use App\Models\Tenant\IntegrationProvider;
 use App\Models\Tenant\User;
 use App\Services\Tenant\IntegrationService;
 use Database\Seeders\TenantDatabaseSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
@@ -16,7 +16,7 @@ use Tests\TestCase;
 
 class IntegrationServiceTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private IntegrationService $service;
     private User $user;

@@ -196,6 +196,7 @@ class FetchFacebookInsightJob implements ShouldQueue
     // ─────────────────────────────────────────────
     private function upsertInsight(int $integrationId, array $insight): void
     {
+        Log::info('Upserting insight: ' . json_encode($insight));
         IntegrationInsight::updateOrCreate(
             [
                 'integration_id' => $integrationId,
