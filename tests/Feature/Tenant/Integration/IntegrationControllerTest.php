@@ -3,7 +3,6 @@
 namespace Tests\Feature\Tenant\Integration;
 
 use App\Models\Tenant\Integration;
-use App\Models\Tenant\IntegrationProvider;
 use App\Models\Tenant\User;
 use App\Services\Tenant\IntegrationService;
 use Database\Seeders\TenantDatabaseSeeder;
