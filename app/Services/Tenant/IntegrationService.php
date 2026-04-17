@@ -76,6 +76,7 @@ class IntegrationService
             'success'   => true,
             'provider'  => $validated['provider'],
             'level'     => $validated['level'],
+            'fields'    => $validated['fields'] ?? null,
             'date_from' => $validated['date_from'],
             'date_to'   => $validated['date_to'],
         ];

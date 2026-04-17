@@ -276,10 +276,10 @@ class IntegrationControllerTest extends TestCase
         $this->authLogin();
 
         $response = $this->tenantGetJson('/api/integrations/status');
-        dump([
-            'status' => $response->status(),
-            'content' => $response->getContent(),
-        ]);
+        // dump([
+        //     'status' => $response->status(),
+        //     'content' => $response->getContent(),
+        // ]);
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [

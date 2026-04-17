@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Central;
+namespace App\Console\Commands\Tenant;
 
 use App\Integrations\Tenant\ExternalService\IntegrationSyncRegistry;
 use App\Models\Central\Tenant;

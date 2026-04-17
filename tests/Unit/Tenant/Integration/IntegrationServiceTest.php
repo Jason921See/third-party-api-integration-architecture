@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Tenant\Services;
+namespace Tests\Unit\Tenant\Integration;
 
 use App\Jobs\Tenant\FetchFacebookInsightJob;
 use App\Models\Tenant\Integration;

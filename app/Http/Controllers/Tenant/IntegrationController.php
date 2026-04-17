@@ -8,17 +8,16 @@ use App\Http\Resources\Tenant\ApiResponseResource;
 use App\Http\Resources\Tenant\Integration\IntegrationResource;
 use App\Http\Resources\Tenant\Integration\IntegrationStatusCollection;
 use App\Models\Tenant\Integration;
-use App\Models\Tenant\IntegrationProvider;
 use App\Services\Tenant\IntegrationService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 
 class IntegrationController extends BaseController
 {
     public function __construct(
         private readonly IntegrationService $integrationService,
+        // private readonly IntegrationRepository $integrationRepository
     ) {}
 
 
@@ -29,9 +28,9 @@ class IntegrationController extends BaseController
     public function connect(ConnectIntegrationRequest $request)
     {
         $validated = $request->validated();
-        Log::info('ConnectIntegrationRequest validated data', ['validated' => $validated]);
+        // Log::info('ConnectIntegrationRequest validated data', ['validated' => $validated]);
         $result = $this->integrationService->connect(
-            userId: auth()->id(),
+            userId: Auth::id(),
             provider: $validated['provider'],
             accessToken: $validated['credentials']['access_token'],
             adAccountId: $validated['credentials']['ad_account_id'],
@@ -60,7 +59,7 @@ class IntegrationController extends BaseController
     {
         $validated = $request->validated();
 
-        $integrations = $this->integrationService->findActiveIntegration(auth()->id(), $validated['provider']);
+        $integrations = $this->integrationService->findActiveIntegration(Auth::id(), $validated['provider']);
 
         if ($integrations->isEmpty()) {
             return ApiResponseResource::error(
